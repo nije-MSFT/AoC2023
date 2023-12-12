@@ -1,7 +1,4 @@
-﻿using System.Collections.Specialized;
-using System.Text;
-
-namespace AoC2023_3
+﻿namespace AoC2023_3
 {
     internal class Program
     {
@@ -21,6 +18,9 @@ namespace AoC2023_3
             while (nextLine != null)
             {
                 totalPart1 += GetPartNumbersInLine(previousLine, currentLine, nextLine);
+                totalPart2 += currentLine.Symbols
+                    .Where(x => x.Value == '*')
+                    .Sum(x => FindGearRatio(previousLine, currentLine, nextLine, x));
 
                 previousLine = currentLine;
                 currentLine = nextLine;
@@ -30,7 +30,10 @@ namespace AoC2023_3
                 lineNumber++;
             }
 
-            totalPart1 += (GetPartNumbersInLine(previousLine, currentLine, new Line()));
+            totalPart1 += GetPartNumbersInLine(previousLine, currentLine, new Line());
+            totalPart2 += currentLine.Symbols
+                .Where(x => x.Value == '*')
+                .Sum(x => FindGearRatio(previousLine, currentLine, new Line(), x));
 
             Console.WriteLine($"Part 1: {totalPart1}");
             Console.WriteLine($"Part 2: {totalPart2}");
@@ -42,15 +45,33 @@ namespace AoC2023_3
 
             foreach (var number in currentLine.Numbers)
             {
-                if (previousLine.Symbols.Any(x => x >= number.StartPosition - 1 && x <= number.EndPosition + 1) ||
-                    currentLine.Symbols.Any(x => x >= number.StartPosition - 1 && x <= number.EndPosition + 1) ||
-                    nextLine.Symbols.Any(x => x >= number.StartPosition - 1 && x <= number.EndPosition + 1))
+                if (previousLine.Symbols
+                    .Concat(currentLine.Symbols
+                        .Concat(nextLine.Symbols))
+                    .Any(x => x.Position >= number.StartPosition - 1 && x.Position <= number.EndPosition + 1))
                 {
                     partSum += number.Value;
                 }
             }
 
             return partSum;
+        }
+
+        static public int FindGearRatio(Line previousLine, Line currentLine, Line nextLine, Symbol gear)
+        {
+            var potentialGearNeighbors =
+                previousLine.Numbers
+                .Concat(currentLine.Numbers
+                    .Concat(nextLine.Numbers))
+                .Where(x => gear.Position >= x.StartPosition - 1 && gear.Position <= x.EndPosition + 1)
+                .ToArray();
+
+            if (potentialGearNeighbors.Length == 2)
+            {
+                return potentialGearNeighbors[0].Value * potentialGearNeighbors[1].Value;
+            }
+
+            return 0;
         }
 
         static public Line ParseLine(string currentLine)
@@ -76,7 +97,7 @@ namespace AoC2023_3
 
                     if (currentLine[position] != '.')
                     {
-                        line.Symbols.Add(position);
+                        line.Symbols.Add(new Symbol(position, currentLine[position]));
                     }
                 }
             }
