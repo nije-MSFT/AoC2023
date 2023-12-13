@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace AoC2023_4
+﻿namespace AoC2023_4
 {
     internal class Program
     {
