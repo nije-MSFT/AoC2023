@@ -42,5 +42,19 @@ namespace AoC2023_5
             //No mapping found
             return input;
         }
+
+        public long GetReverseTranslation(long input)
+        {
+            foreach (var range in ranges)
+            {
+                if (input >= range.DestinationRangeStart && input < range.DestinationRangeStart + range.RangeLength)
+                {
+                    return range.SourceRangeStart + (input - range.DestinationRangeStart);
+                }
+            }
+
+            //No mapping found
+            return input;
+        }
     }
 }
