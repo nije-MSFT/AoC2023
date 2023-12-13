@@ -73,32 +73,61 @@
 
             var lowestLocation = long.MaxValue;
 
-            for (long location = 0; location < long.MaxValue; location++)
-            {
-                var humidity = maps["humidity-to-location"].GetReverseTranslation(location);
-                var temperature = maps["temperature-to-humidity"].GetReverseTranslation(humidity);
-                var light = maps["light-to-temperature"].GetReverseTranslation(temperature);
-                var water = maps["water-to-light"].GetReverseTranslation(light);
-                var fertilizer = maps["fertilizer-to-water"].GetReverseTranslation(water);
-                var soil = maps["soil-to-fertilizer"].GetReverseTranslation(fertilizer);
-                var seed = maps["seed-to-soil"].GetReverseTranslation(soil);
+            long currentLocation = 0;
+            List<Task<long>> tasks = new List<Task<long>>();
 
-                foreach (var range in seedRanges)
+            while (currentLocation < long.MaxValue)
+            {
+                if (tasks.Count < 10)
                 {
-                    if (seed >= range.SeedStart && seed <= range.SeedStart + range.RangeLength)
+                    tasks.Add(FindLowestLocationInRangeAsync(maps, seedRanges, currentLocation, currentLocation + 1000000));
+                    currentLocation += 1000000;
+                }
+                else
+                {
+                    Task.WaitAny(tasks.ToArray());
+                    var completedTasks = tasks.Where(x => x.IsCompleted).ToArray();
+
+                    if (completedTasks.Select(x => x.Result).Any(y => y != long.MaxValue))
                     {
-                        lowestLocation = location;
+                        Task.WaitAll(tasks.ToArray());
+                        lowestLocation = tasks.Select(x => x.Result).Where(y => y != long.MaxValue).Min();
                         break;
                     }
-                }
 
-                if (lowestLocation != long.MaxValue)
-                {
-                    break;
+                    tasks.RemoveAll(x => completedTasks.Select(y => y.Id).Contains(x.Id));
                 }
             }
 
             Console.WriteLine($"Part 2: {lowestLocation}");
+        }
+
+        public static Task<long> FindLowestLocationInRangeAsync(Dictionary<string, Map> maps, List<SeedRange> seedRanges, long start, long end)
+        {
+            return Task<long>.Run(() =>
+                {
+                    for (long currentLocation = start; currentLocation <= end; currentLocation++)
+                    {
+                        var humidity = maps["humidity-to-location"].GetReverseTranslation(currentLocation);
+                        var temperature = maps["temperature-to-humidity"].GetReverseTranslation(humidity);
+                        var light = maps["light-to-temperature"].GetReverseTranslation(temperature);
+                        var water = maps["water-to-light"].GetReverseTranslation(light);
+                        var fertilizer = maps["fertilizer-to-water"].GetReverseTranslation(water);
+                        var soil = maps["soil-to-fertilizer"].GetReverseTranslation(fertilizer);
+                        var seed = maps["seed-to-soil"].GetReverseTranslation(soil);
+
+                        foreach (var range in seedRanges)
+                        {
+                            if (seed >= range.SeedStart && seed <= range.SeedStart + range.RangeLength)
+                            {
+                                
+                                return currentLocation;
+                            }
+                        }
+                    }
+
+                    return long.MaxValue;
+                });
         }
     }
 }
