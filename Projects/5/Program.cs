@@ -1,12 +1,9 @@
-﻿using System.Diagnostics;
-
-namespace AoC2023_5
+﻿namespace AoC2023_5
 {
     internal class Program
     {
         static void Main(string[] args)
         {
-            var timer = Stopwatch.StartNew();
             var inputLines = File.ReadAllLines(".\\Input.txt");
 
             bool readingMap = false;
@@ -74,28 +71,34 @@ namespace AoC2023_5
 
             Console.WriteLine($"Part 1: {seedToLocation.Values.Min()}");
 
-            var lowestSeed = long.MaxValue;
+            var lowestLocation = long.MaxValue;
 
-            foreach (var range in seedRanges)
+            for (long location = 0; location < long.MaxValue; location++)
             {
-                for (long x = 0; x < range.RangeLength; x++)
-                {
-                    var soil = maps["seed-to-soil"].GetTranslation(range.SeedStart + x);
-                    var fertilizer = maps["soil-to-fertilizer"].GetTranslation(soil);
-                    var water = maps["fertilizer-to-water"].GetTranslation(fertilizer);
-                    var light = maps["water-to-light"].GetTranslation(water);
-                    var temperature = maps["light-to-temperature"].GetTranslation(light);
-                    var humidity = maps["temperature-to-humidity"].GetTranslation(temperature);
-                    var location = maps["humidity-to-location"].GetTranslation(humidity);
+                var humidity = maps["humidity-to-location"].GetReverseTranslation(location);
+                var temperature = maps["temperature-to-humidity"].GetReverseTranslation(humidity);
+                var light = maps["light-to-temperature"].GetReverseTranslation(temperature);
+                var water = maps["water-to-light"].GetReverseTranslation(light);
+                var fertilizer = maps["fertilizer-to-water"].GetReverseTranslation(water);
+                var soil = maps["soil-to-fertilizer"].GetReverseTranslation(fertilizer);
+                var seed = maps["seed-to-soil"].GetReverseTranslation(soil);
 
-                    if (location < lowestSeed)
+                foreach (var range in seedRanges)
+                {
+                    if (seed >= range.SeedStart && seed <= range.SeedStart + range.RangeLength)
                     {
-                        lowestSeed = location;
+                        lowestLocation = location;
+                        break;
                     }
+                }
+
+                if (lowestLocation != long.MaxValue)
+                {
+                    break;
                 }
             }
 
-            Console.WriteLine($"Part 2: {lowestSeed}");
+            Console.WriteLine($"Part 2: {lowestLocation}");
         }
     }
 }
