@@ -68,7 +68,7 @@
 
             totalPart1 = NumberOfSteps(allNodes["AAA"], steps);
 
-            var allResultingSteps = new List<long>();
+            var allResultingSteps = new List<int>();
             var allCurrentNodes = new List<Node>();
 
             allCurrentNodes
@@ -79,47 +79,46 @@
                 allResultingSteps.Add(NumberOfSteps(node, steps));
             }
 
+            var allFactors = new List<int>();
+
             foreach (var path in allResultingSteps)
             {
                 Console.WriteLine(path);
-                primeFactors(path);
+                allFactors.AddRange(primeFactors(path));
             }
 
             Console.WriteLine($"Part 1: {totalPart1}");
             Console.WriteLine($"Part 2: {totalPart2}");
         }
 
-        public static void primeFactors(long n)
+        public static List<int> primeFactors(int n)
         {
-            // Print the number of 2s that divide n 
+            var primeFactors = new List<int>();
+
             while (n % 2 == 0)
             {
-                Console.Write(2 + " ");
+                primeFactors.Add(2);
                 n /= 2;
             }
 
-            // n must be odd at this point. So we can 
-            // skip one element (Note i = i +2) 
             for (int i = 3; i <= Math.Sqrt(n); i += 2)
             {
-                // While i divides n, print i and divide n 
                 while (n % i == 0)
                 {
-                    Console.Write(i + " ");
+                    primeFactors.Add(i);
                     n /= i;
                 }
             }
 
-            // This condition is to handle the case when 
-            // n is a prime number greater than 2 
             if (n > 2)
-                Console.Write(n);
-            Console.Write('\n');
+                primeFactors.Add(n);
+
+            return primeFactors;
         }
 
-        public static long NumberOfSteps(Node startingNode, string steps)
+        public static int NumberOfSteps(Node startingNode, string steps)
         {
-            long totalSteps = 0;
+            int totalSteps = 0;
             int stepPosition = 0;
 
             Node currentNode = startingNode;
